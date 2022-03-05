@@ -13,45 +13,24 @@
 //limitations under the License.
 //////////////////////////////////////////////////////////////////////////
 
-package httpServer
+package main
 
 import (
-	"github.com/gorilla/mux"
-	ecp "ecpClient"
-	"net/http"
-	"time"
-	"github.com/sirupsen/logrus"
+	"fmt"
+	"os"
+	"regexp"
+	httpServer "webdriver/httpServer"
 )
 
-
-
-type Server struct {
-    router *mux.Router
-	sessions map[string]*SessionInfo
-} 
-
-type SessionInfo struct {
-	client *ecp.EcpClient
-	plugin *ecp.PluginClient
-	capability *Capability
-	pressDelay time.Duration
-}
-
-func GetServerInstance() *Server {
-	server := &Server{
-		router: mux.NewRouter(),
-		sessions: make(map[string]*SessionInfo),
-	}
-   
-	return server
-}
-
-func (s *Server) Start(port string) {
-	s.SetUpRoutes()
-	err := http.ListenAndServe(":" + port, nil)
-	if err != http.ErrServerClosed {
-	   logrus.WithError(err).Error("Http Server stopped unexpected")
+func main() {
+	defaultPort := "9000"
+	validPort := regexp.MustCompile(`^[0-9]+$`)
+	server := httpServer.GetServerInstance()
+	if len(os.Args) > 1 && validPort.MatchString(os.Args[1]) {
+		fmt.Println("Starting driver on port: " + os.Args[1])
+		server.Start(os.Args[1])
 	} else {
-	   logrus.WithError(err).Info("Http Server stopped")
+		fmt.Println("Starting driver on port: " + defaultPort)
+		server.Start(defaultPort)
 	}
- }
+}
